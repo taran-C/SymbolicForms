@@ -1,3 +1,5 @@
+export exteriorderivative, interiorproduct, liederivative, interpx, interpy, interpdiag
+
 """
 Exterior Derivative of a differential form
 """
@@ -9,8 +11,8 @@ exteriorderivative(a::Expression) = RealValue(0)
 Interior Product of two forms TODO check vector placement on grid and interpolations
 """
 interiorproduct(X::Vector_2D, a::Expression) = RealValue(0)
-interiorproduct(X::Vector_2D, a::Form1_2D) = Form0_2D(interpx(a.u * X.u) + interpy(a.v * X.v))
-interiorproduct(X::Vector_2D, a::Form2_2D) = Form1_2D(-X.v * interpy(a.w), X.u * interpx(a.w))
+interiorproduct(X::Vector_2D, a::Form1_2D) = Form0_2D(a.u * X.u + a.v * X.v)
+interiorproduct(X::Vector_2D, a::Form2_2D) = Form1_2D(-X.v * a.w, X.u * a.w)
 
 """
 Lie Derivative of a form a transported by a vector field X

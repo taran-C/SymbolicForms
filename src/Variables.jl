@@ -1,3 +1,7 @@
+export RealValue, ComplexValue
+export ScalarVariable, ArrayVariable
+export Vector_2D, Form0_2D, Form1_2D, Form2_2D
+
 """
 Generic Expression
 """

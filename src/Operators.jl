@@ -10,7 +10,7 @@ Unary Operators
 abstract type UnaryOperator <: Operator end
 getindex(expr::UnaryOperator, depx, depy) = op(expr)(expr.expr[depx,depy])
 string(expr::UnaryOperator) = "$(symbol(expr))$(string(expr.expr))"
-eval(expr::UnaryOperator, vals::AbstractDict) = op(expr)(eval(expr.expr))
+eval(expr::UnaryOperator, vals::AbstractDict) = op(expr)(eval(expr.expr, vals))
 
 """
 Negative, represents the negation of an expression

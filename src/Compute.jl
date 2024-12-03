@@ -1,3 +1,5 @@
+export compute
+
 """
 Computation
 
@@ -8,7 +10,7 @@ function compute(f::Expression, vals, nx, ny, nh, out)
 		for j in 1+nh:ny-nh
 			vals["i"] = i
 			vals["j"] = j
-			out[i,j] = eval(f, vals)
+			out[i,j] = eval(f, vals) * vals["msk"][i,j]
 		end
 	end
 	return out
