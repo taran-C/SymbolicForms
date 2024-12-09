@@ -4,6 +4,7 @@ import Base: +,*,^,-, string, getindex
 
 include("Variables.jl")
 include("Operators.jl")
+include("Mesh.jl")
 include("Compute.jl")
 include("DifferentialOperators.jl")
 include("Simplification.jl")

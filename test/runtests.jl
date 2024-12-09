@@ -1,5 +1,5 @@
 using SymbolicForms
-using GLMakie
+#using GLMakie
 
 function print_lie()
 	x = ArrayVariable("x")
@@ -41,7 +41,10 @@ function passive_2_form_transport()
 		
 		uarr[i,j] = -cos(pi*yarr[i,j]) * sin(pi*xarr[i,j])* msk[i,j]
 		varr[i,j] = cos(pi*xarr[i,j]) * sin(pi*yarr[i,j]) * msk[i,j]
-		tracarr[i,j] = msk[i,j] * (mod(floor(xarr[i,j] / (8*dx)),2) + mod(floor(yarr[i,j] / (8*dy)), 2) -1)
+		#tracarr[i,j] = msk[i,j] * (mod(floor(xarr[i,j] / (8*dx)),2) + mod(floor(yarr[i,j] / (8*dy)), 2) -1)
+		if (xarr[i,j]>0.4) & (xarr[i,j]<0.6) & (yarr[i,j]>0.4) & (yarr[i,j]<0.6)
+			tracarr[i,j] = 1
+		end
 	end
 
 	x = ArrayVariable("x")
@@ -64,5 +67,23 @@ function passive_2_form_transport()
 	current_figure()
 end
 
-#print_lie()
-passive_2_form_transport()
+function mesh_test()
+	nx,ny,nh = 30,30, 3
+	msk = zeros(nx,ny)
+	for i in 1:nx, j in 1:ny
+		if (i>nh) & (i<nx-nh) & (j>nh) & (j<ny-nh)
+			msk[i,j] = 1
+		end
+	end
+
+	mesh = Mesh(msk)
+	u = ArrayVariable("u")
+	v = ArrayVariable("v")
+	U = Vector_2D(u,v)
+
+	println(string(flat(U)))
+end
+
+print_lie()
+#passive_2_form_transport()
+mesh_test()
