@@ -6,7 +6,9 @@ export Vector_2D, Form0_2D, Form1_2D, Form2_2D
 Generic Expression
 """
 abstract type Expression end
+
 getindex(A::Expression, depx, depy) = A
+eval(expr::Expression) = eval(expr, Dict())
 
 """
 An atom is a singular element holding a value (Variable or not)
@@ -69,25 +71,44 @@ function eval(expr::ArrayVariable, vals::AbstractDict)
 	return vals[expr.name][vals["i"]+expr.depx, vals["j"]+expr.depy]
 end
 
+
+#TODO separate from here to better isolate variables related to differential geometry
+
+"""
+	Primality
+
+(Primal or Dual)
+"""
+abstract type Primality end
+abstract type Primal <: Primality end
+abstract type Dual <: Primality end
+export Primal, Dual
+
 """
 Vectors
 
 implemented basically in the same way as forms
 """
-abstract type Vector <: Variable end
+abstract type Vector{P<:Primality} <: Variable end
 
 """
 2D Vector
 """
-struct Vector_2D{U<:Expression, V<: Expression} <: Vector
+struct Vector_2D{P} <: Vector{P}
 	name::String
-	u::U
-	v::V
+	u::Expression
+	v::Expression
+
+	function Vector_2D(name, u, v, P)
+		@assert P<:Primality "P must be Primal or Dual"
+
+		return new{P}(name, u, v)
+	end
 end
-Vector_2D(name::String, u::Real, v::Real) = Vector_2D(name, RealValue(u),RealValue(v))
-Vector_2D(name::String, u::Expression, v::Real) = Vector_2D(name, u,RealValue(v))
-Vector_2D(name::String, u::Real, v::Expression) = Vector_2D(name, RealValue(u),v)
-Vector_2D(u,v) = Vector_2D("undefined", u,v)
+Vector_2D(name::String, u::Real, v::Real, P) = Vector_2D(name, RealValue(u),RealValue(v), P)
+Vector_2D(name::String, u::Expression, v::Real, P) = Vector_2D(name, u,RealValue(v), P)
+Vector_2D(name::String, u::Real, v::Expression, P) = Vector_2D(name, RealValue(u),v, P)
+Vector_2D(u,v, P) = Vector_2D("undefined", u,v, P)
 #TODO use precedence to handle parentheses here
 string(expr::Vector_2D) = "($(string(expr.u)), $(string(expr.v)))"
 prec(expr::Vector_2D) = 1
@@ -105,17 +126,23 @@ Forms
 
 Need to find a way to directly pass a form an not the arrays contained within it if they are, and to output two arrays/a 1-form if the final result of an expression is a 1-form
 """
-abstract type Form <: Variable end
+abstract type Form{P<:Primality} <: Variable end
 
 """
 0-Form in 2D
 """
-struct Form0_2D{Q <: Expression} <: Form
+struct Form0_2D{P} <: Form{P}
 	name::String
-	q::Q
+	q::Expression
+
+	function Form0_2D(name, q, P)
+		@assert P<:Primality "P must be Primal or Dual"
+
+		return new{P}(name, q)
+	end
 end
-Form0_2D(name::String, q::Real) = Form0_2D(name, RealValue(q))
-Form0_2D(q) = Form0_2D("undefined", q)
+Form0_2D(name::String, q::Real, P) = Form0_2D(name, RealValue(q), P)
+Form0_2D(q, P) = Form0_2D("undefined", q, P)
 string(expr::Form0_2D) = "$(string(expr.q))"
 prec(expr::Form0_2D) = 10
 function eval(expr::Form0_2D, vals::AbstractDict)
@@ -129,15 +156,21 @@ end
 """
 1-Form in 2D
 """
-struct Form1_2D{U <: Expression, V <:  Expression} <: Form
+struct Form1_2D{P} <: Form{P}
 	name::String
-	u::U
-	v::V
+	u::Expression
+	v::Expression
+
+	function Form1_2D(name, u, v, P)
+		@assert P<:Primality "P must be Primal or Dual"
+
+		return new{P}(name, u, v)
+	end
 end
-Form1_2D(name::String, u::Real, v::Real) = Form1_2D(name, RealValue(u),RealValue(v))
-Form1_2D(name::String, u::Expression, v::Real) = Form1_2D(name, u,RealValue(v))
-Form1_2D(name::String, u::Real, v::Expression) = Form1_2D(name, RealValue(u),v)
-Form1_2D(u,v) = Form1_2D("undefined", u,v)
+Form1_2D(name::String, u::Real, v::Real, P) = Form1_2D(name, RealValue(u),RealValue(v), P)
+Form1_2D(name::String, u::Expression, v::Real, P) = Form1_2D(name, u,RealValue(v), P)
+Form1_2D(name::String, u::Real, v::Expression, P) = Form1_2D(name, RealValue(u),v, P)
+Form1_2D(u,v, P) = Form1_2D("undefined", u,v, P)
 #TODO use precedence to handle parentheses here
 string(expr::Form1_2D) = "($(string(expr.u)))dx + ($(string(expr.v)))dy"
 prec(expr::Form1_2D) = 1
@@ -152,12 +185,18 @@ end
 """
 2-Form in 2D
 """
-struct Form2_2D{W <: Expression} <: Form
+struct Form2_2D{P} <: Form{P}
 	name::String
-	w::W
+	w::Expression
+
+	function Form2_2D(name, w, P)
+		@assert P<:Primality "P must be Primal or Dual"
+
+		return new{P}(name, w)
+	end
 end
-Form2_2D(name::String, w::Real) = Form2_2D(name, RealValue(w))
-Form2_2D(w) = Form2_2D("undefined", w)
+Form2_2D(name::String, w::Real, P) = Form2_2D(name, RealValue(w), P)
+Form2_2D(w, P) = Form2_2D("undefined", w, P)
 string(expr::Form2_2D) = "($(string(expr.w)))dxdy"
 prec(expr::Form2_2D) = 10
 function eval(expr::Form2_2D, vals::AbstractDict)

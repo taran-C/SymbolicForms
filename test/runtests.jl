@@ -18,37 +18,47 @@ function print_lie()
 	end
 end
 
+function conditionals_test()
+	a = RealValue(4)
+	b = ScalarVariable("x")
+
+	max = TernaryOperator(a>b, a,b)
+
+	println(string(max))
+	println(SymbolicForms.eval(max, Dict("x"=>6)))
+	println((a>b) isa SymbolicForms.BooleanExpression)
+end
+
+function interpolation_test()
+	U = ArrayVariable("U")
+	q = ArrayVariable("q")
+
+	println(string(SymbolicForms.upwindx(U,q)))
+end
+
 function passive_2_form_transport()
 	#A lot of this has to be done in a Mesh object (is it in the scope of this Package ? Or perhaps different modules in the package ?)
-	nx,ny = 30,30
-	nh = 3
-	dx = 1/(nx-2*nh)
-	dy = 1/(ny-2*nh)
+	nx, ny, nh = 30,30,3
 
 	msk = zeros(nx,ny)
-	xarr, yarr = zeros(nx,ny), zeros(nx,ny)
+	for j=1:ny, i=1:nx
+		if (i>nh) & (i<nx-nh) & (j>nh) & (j<ny-nh)
+			msk[i,j] = 1
+		end
+	end
+	manifold = Manifold(msk, nx=nx, ny=ny, nh=nh)
+		
 	uarr, varr = zeros(nx,ny), zeros(nx,ny)
 	tracarr = zeros(nx,ny)
 	for j=1:ny, i=1:nx
-		xarr[i,j] = dx * (i-nh-0.5)
-		yarr[i,j] = dy * (j-nh-0.5)
-		
-		if (i>nh) & (i<nx-nh) & (j>nh) & (j<ny-nh)
-			if sqrt((xarr[i,j]-0.5)^2 + (yarr[i,j]-0.5)^2)<0.5
-				msk[i,j] = 1
-			end
-		end
-		
-		uarr[i,j] = -cos(pi*yarr[i,j]) * sin(pi*xarr[i,j])* msk[i,j]
-		varr[i,j] = cos(pi*xarr[i,j]) * sin(pi*yarr[i,j]) * msk[i,j]
+		uarr[i,j] = -cos(pi*manifold.yc[i,j]) * sin(pi*manifold.xc[i,j])* manifold.mskx[i,j]
+		varr[i,j] = cos(pi*manifold.xc[i,j]) * sin(pi*manifold.yc[i,j]) * manifold.msky[i,j]
 		#tracarr[i,j] = msk[i,j] * (mod(floor(xarr[i,j] / (8*dx)),2) + mod(floor(yarr[i,j] / (8*dy)), 2) -1)
-		if (xarr[i,j]>0.4) & (xarr[i,j]<0.6) & (yarr[i,j]>0.4) & (yarr[i,j]<0.6)
+		if (manifold.xc[i,j]>0.4) & (manifold.xc[i,j]<0.6) & (manifold.yc[i,j]>0.4) & (manifold.yc[i,j]<0.6)
 			tracarr[i,j] = 1
 		end
 	end
 
-	x = ArrayVariable("x")
-	y = ArrayVariable("y")
 	u,v = ArrayVariable("u"), ArrayVariable("v")
 	U = Vector_2D(u,v)
 	ta = ArrayVariable("trac")
@@ -60,14 +70,14 @@ function passive_2_form_transport()
 
 	fig, ax, hm = heatmap(tracarr)
 	record(fig, "2form.mp4", 1:dt:10, framerate = 10) do t
-		compute(liederivative(U,trac), Dict("msk"=> msk, "u"=>uarr, "v"=>varr, "x"=>xarr, "y"=>yarr, "trac"=>tracarr, "i"=>0, "j"=>0), nx, ny, nh, out)
+		compute(liederivative(U,trac), Dict{String, Any}("u"=>uarr, "v"=>varr, "trac"=>tracarr), manifold, out)
 		tracarr += out * dt
 		heatmap!(ax, tracarr)
 	end
 	current_figure()
 end
 
-function mesh_test()
+function manifold_test()
 	nx,ny,nh = 30,30, 3
 	msk = zeros(nx,ny)
 	for i in 1:nx, j in 1:ny
@@ -76,7 +86,7 @@ function mesh_test()
 		end
 	end
 
-	mesh = Mesh(msk)
+	manifold = Manifold(msk)
 	u = ArrayVariable("u")
 	v = ArrayVariable("v")
 	U = Vector_2D(u,v)
@@ -84,6 +94,8 @@ function mesh_test()
 	println(string(flat(U)))
 end
 
-print_lie()
+#print_lie()
 #passive_2_form_transport()
-mesh_test()
+#manifold_test()
+conditionals_test()
+#interpolation_test()

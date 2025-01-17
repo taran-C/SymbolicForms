@@ -22,7 +22,7 @@ symbol(expr::Negative) = "-"
 op(expr::Negative) = -
 prec(expr::Negative) = 2
 -(expr::Expression) = Negative(expr)
-
+-(expr::Form1_2D{P}) where {P} = Form1_2D(-expr.u, -expr.v, P)
 
 """
 Binary Operators
@@ -63,6 +63,8 @@ prec(expr::Addition) = 1
 +(left::Expression, right::Expression) = Addition(left, right)
 +(left::Expression, right::Real) = Addition(left, RealValue(right))
 +(left::Real, right::Expression) = Addition(RealValue(left), right)
++(left::Form0_2D{P}, right::Form0_2D{P}) where {P} = Form0_2D(left.q + right.q, P)
++(left::Form2_2D{P}, right::Form2_2D{P}) where {P} = Form2_2D(left.w + right.w, P)
 
 """
 Substraction
@@ -77,6 +79,7 @@ prec(expr::Substraction) = 2
 -(left::Expression, right::Expression) = Substraction(left, right)
 -(left::Expression, right::Real) = Substraction(left, RealValue(right))
 -(left::Real, right::Expression) = Substraction(RealValue(left), right)
+-(left::Form1_2D{P}, right::Form1_2D{P}) where {P} = Form1_2D(left.u-right.u, left.v-right.v, P)
 
 """
 Multiplication
@@ -89,8 +92,26 @@ symbol(expr::Multiplication) = "*"
 op(expr::Multiplication) = *
 prec(expr::Multiplication) = 3
 *(left::Expression, right::Expression) = Multiplication(left, right)
-*(left::Expression, right::Real) = Multiplication(left, RealValue(right))
-*(left::Real, right::Expression) = Multiplication(RealValue(left), right)
+*(left::Expression, right::Real) = left * RealValue(right)
+*(left::Real, right::Expression) = RealValue(left) * right
+*(left::Expression, right::Form0_2D{P}) where {P} = Form0_2D(left * right.q, P)
+
+"""
+Division
+
+TODO error handling
+"""
+struct Division{L<:Expression, R<:Expression} <: BinaryOperator
+	left::L
+	right::R
+end
+symbol(expr::Division) = "/"
+op(expr::Division) = /
+prec(expr::Division) = 3
+/(left::Expression, right::Expression) = Division(left, right)
+/(left::Expression, right::Real) = Division(left, RealValue(right))
+/(left::Real, right::Expression) = Division(RealValue(left), right)
+
 
 """
 Exponent

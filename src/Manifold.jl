@@ -1,11 +1,11 @@
-export Mesh
+export Manifold
 
 """
-Mesh
+Manifold
 
 Object representing the spatial characteristics of our domain
 """
-struct Mesh
+struct Manifold
 	Lx::Real
 	Ly::Real
 
@@ -26,7 +26,7 @@ struct Mesh
 	dy
 	A
 end
-function Mesh(msk, Lx=1, Ly=1, nx=30, ny=30, nh=3)
+function Manifold(msk; Lx=1, Ly=1, nx=30, ny=30, nh=3)
 	xc = zeros(nx,ny)
 	yc = zeros(nx,ny)
 
@@ -47,12 +47,12 @@ function Mesh(msk, Lx=1, Ly=1, nx=30, ny=30, nh=3)
 	end
 
 
-	return Mesh(Lx,Ly,nx,ny,nh,msk,mskx,msky,mskv,xc,yc, dx,dy,A)
+	return Manifold(Lx,Ly,nx,ny,nh,msk,mskx,msky,mskv,xc,yc, dx,dy,A)
 end
 
 """
-Global Expressions representing any mesh
-Can be used directly in differential operators for example, and compute will need a mesh object to forward variables
+Global Expressions representing any manifold
+Can be used directly in differential operators for example, and compute will need a manifold object to forward variables
 """
 Lx = ScalarVariable("Lx")
 Ly = ScalarVariable("Ly")
@@ -67,9 +67,21 @@ mskx = ArrayVariable("mskx")
 msky = ArrayVariable("msky")
 mskv = ArrayVariable("mskv")
 
+#Interp Orders TODO create Order object (cf Forms.jl) that can be used for concrete OR expr objects
+ocx = ArrayVariable("ocx")
+ocy = ArrayVariable("ocy")
+
+oxx = ArrayVariable("oxx")
+oxy = ArrayVariable("oxy")
+
+oyx = ArrayVariable("oyx")
+oyy = ArrayVariable("oyy")
+
+#Grid points
 xc = ArrayVariable("xc")
 yc = ArrayVariable("yc")
 
+#Metric
 dx = ArrayVariable("dx")
 dy = ArrayVariable("dy")
 A = ArrayVariable("A")
